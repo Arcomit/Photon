@@ -661,9 +661,19 @@ u     */
             };
             var normal = new Vector3f(0, 0, 1);
             var spaceScale = getSpaceScale();
+
+            // 应用伸展广告牌的长度缩放
+            var finalSize = new Vector3f(size);
+            if (renderMode == ParticleRendererSetting.Mode.StretchedBillboard) {
+                var velocity = getRealVelocity();
+                var speed = velocity.length();
+                var lengthScale = config.renderer.getLengthScale();
+                finalSize.y *= (1.0f + speed * lengthScale);
+            }
+
             for (var i = 0; i < 4; ++i) {
                 var vertex = rawVertexes[i];
-                vertex.mul(size.x, size.y, size.z);
+                vertex.mul(finalSize.x, finalSize.y, finalSize.z);
                 vertex = quaternion.transform(vertex);
                 vertex.mul(spaceScale);
                 vertex.add(x, y, z);

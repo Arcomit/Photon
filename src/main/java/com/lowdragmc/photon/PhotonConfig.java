@@ -24,6 +24,7 @@ public class PhotonConfig {
 //    public final ModConfigSpec.ConfigValue<BloomMode> bloomMode;
     public final ModConfigSpec.ConfigValue<Double> bloomThreshold;
     public final ModConfigSpec.ConfigValue<Double> bloomIntensity;
+    public final ModConfigSpec.ConfigValue<Double> bloomIntensityWithIrisShader;
     public final ModConfigSpec.ConfigValue<Boolean> enableBloomWithIrisShader;
     public final ModConfigSpec.ConfigValue<Boolean> irisShaderCompatibleMode;
 
@@ -33,6 +34,7 @@ public class PhotonConfig {
 //        bloomMode = builder.defineEnum("bloom_mode", BloomMode.SCATTER, BloomMode.values());
         bloomThreshold = builder.defineInRange("bloom_threshold", 1, 0, 10d);
         bloomIntensity = builder.defineInRange("bloom_intensity", 0.7, 0, 1);
+        bloomIntensityWithIrisShader = builder.defineInRange("bloom_intensity_with_iris_shader", 0.0, 0, 1);
 
         enableBloomWithIrisShader = builder.define("enable_bloom_with_iris_shader", true);
         irisShaderCompatibleMode = builder.define("iris_shader_compatible_mode", true);

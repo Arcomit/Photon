@@ -17,6 +17,7 @@ import net.neoforged.neoforge.client.model.IQuadTransformer;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.system.MemoryStack;
 
@@ -440,10 +441,40 @@ public class ParticleInstanceRenderer {
                     quaternion = new Quaternionf(quaternion).rotateXYZ(rotation.x, rotation.y, rotation.z);
                 }
 
+                // 应用伸展广告牌的缩放
+                var finalSize = new Vector3f(size);
+                if (renderMode == ParticleRendererSetting.Mode.StretchedBillboard) {
+                    var velocity = p.getRealVelocity();
+                    var speed = velocity.length();
+                    var rendererSetting = p.getConfig().renderer;
+                    var speedScale = rendererSetting.getSpeedScale();
+                    var lengthScale = rendererSetting.getLengthScale();
+                    var cameraScale = rendererSetting.getCameraScale();
+                    
+                    // Speed Scale: 基于速度的拉伸
+                    var speedStretch = speed * speedScale;
+                    
+                    // Length Scale: 基于粒子大小的拉伸
+                    var lengthStretch = size.length() * lengthScale;
+                    
+                    // Camera Scale: 基于与相机距离的缩放
+                    var particlePos = p.getWorldPos(partialTicks);
+                    var cameraPos = camera.getPosition();
+                    var distanceToCamera = (float) Math.sqrt(
+                        (cameraPos.x - particlePos.x) * (cameraPos.x - particlePos.x) +
+                        (cameraPos.y - particlePos.y) * (cameraPos.y - particlePos.y) +
+                        (cameraPos.z - particlePos.z) * (cameraPos.z - particlePos.z)
+                    );
+                    var cameraStretch = distanceToCamera * cameraScale;
+                    
+                    // 组合所有拉伸效果（Y轴方向）
+                    finalSize.y *= (1.0f + speedStretch + lengthStretch + cameraStretch);
+                }
+
                 // pos vec3
                 buffer.put(x).put(y).put(z);
                 // size vec2
-                buffer.put(size.x).put(size.y);
+                buffer.put(finalSize.x).put(finalSize.y);
                 // scale vec3
                 buffer.put(scale.x).put(scale.y).put(scale.z);
                 // rot quat (vec4)

@@ -2,6 +2,7 @@ package com.lowdragmc.photon.client.postprocessing;
 
 import com.lowdragmc.lowdraglib2.Platform;
 import com.lowdragmc.lowdraglib2.client.shader.HDRTarget;
+import com.lowdragmc.photon.Photon;
 import com.lowdragmc.photon.PhotonConfig;
 import com.lowdragmc.photon.client.PhotonShaders;
 import com.lowdragmc.photon.client.gameobject.emitter.renderpipeline.RenderPassPipeline;
@@ -176,7 +177,11 @@ public class PhotonPostProcessing {
         RenderSystem.defaultBlendFunc();
         finalCombinePassShader.setSampler("inputA", MIPS.getFirst().swapA);
         finalCombinePassShader.setSampler("inputB", srcTarget);
-        finalCombinePassShader.safeGetUniform("BloomIntensive").set(PhotonConfig.INSTANCE.bloomIntensity.get().floatValue());
+        if (Photon.isUsingShaderPack()){
+            finalCombinePassShader.safeGetUniform("BloomIntensive").set(PhotonConfig.INSTANCE.bloomIntensityWithIrisShader.get().floatValue());
+        }else {
+            finalCombinePassShader.safeGetUniform("BloomIntensive").set(PhotonConfig.INSTANCE.bloomIntensity.get().floatValue());
+        }
         blitShader(finalCombinePassShader, OUTPUT, false);
 
         RenderSystem.depthMask(true);
