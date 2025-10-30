@@ -450,25 +450,25 @@ public class ParticleInstanceRenderer {
                     var speedScale = rendererSetting.getSpeedScale();
                     var lengthScale = rendererSetting.getLengthScale();
                     var cameraScale = rendererSetting.getCameraScale();
-                    
+
                     // Speed Scale: 基于速度的拉伸
                     var speedStretch = speed * speedScale;
-                    
+
                     // Length Scale: 基于粒子大小的拉伸
                     var lengthStretch = size.length() * lengthScale;
-                    
+
                     // Camera Scale: 基于与相机距离的缩放
                     var particlePos = p.getWorldPos(partialTicks);
                     var cameraPos = camera.getPosition();
                     var distanceToCamera = (float) Math.sqrt(
-                        (cameraPos.x - particlePos.x) * (cameraPos.x - particlePos.x) +
-                        (cameraPos.y - particlePos.y) * (cameraPos.y - particlePos.y) +
-                        (cameraPos.z - particlePos.z) * (cameraPos.z - particlePos.z)
+                            (cameraPos.x - particlePos.x) * (cameraPos.x - particlePos.x) +
+                                    (cameraPos.y - particlePos.y) * (cameraPos.y - particlePos.y) +
+                                    (cameraPos.z - particlePos.z) * (cameraPos.z - particlePos.z)
                     );
                     var cameraStretch = distanceToCamera * cameraScale;
-                    
-                    // 组合所有拉伸效果（Y轴方向）
-                    finalSize.y *= (1.0f + speedStretch + lengthStretch + cameraStretch);
+
+                    // 组合所有拉伸效果（X轴方向）
+                    finalSize.x *= (1.0f + speedStretch + lengthStretch + cameraStretch);
                 }
 
                 // pos vec3

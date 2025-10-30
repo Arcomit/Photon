@@ -8,6 +8,7 @@ import com.lowdragmc.lowdraglib2.configurator.annotation.ConfigSetter;
 import com.lowdragmc.lowdraglib2.configurator.annotation.Configurable;
 import com.lowdragmc.lowdraglib2.configurator.ui.BooleanConfigurator;
 import com.lowdragmc.lowdraglib2.configurator.ui.ConfiguratorGroup;
+import com.lowdragmc.lowdraglib2.configurator.ui.NumberConfigurator;
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.lowdragmc.photon.Photon;
@@ -44,51 +45,34 @@ public class ParticleRendererSetting extends RendererSetting implements IConfigu
         }),
         StretchedBillboard((p, c, t) -> {
             var velocity = p.getRealVelocity();
-            if (velocity.lengthSquared() < 0.0001f) {
-                // 如果速度太小，使用普通广告牌
-                return c.rotation();
-            }
-            
+
             // 计算粒子到摄像机的向量
             var particlePos = p.getWorldPos(t);
             var cameraPos = c.getPosition();
             var toCamera = new Vector3f(
-                (float)(cameraPos.x - particlePos.x),
-                (float)(cameraPos.y - particlePos.y),
-                (float)(cameraPos.z - particlePos.z)
+                    (float)(cameraPos.x - particlePos.x),
+                    (float)(cameraPos.y - particlePos.y),
+                    (float)(cameraPos.z - particlePos.z)
             );
-            
+
             if (toCamera.lengthSquared() < 0.0001f) {
                 return c.rotation();
             }
             toCamera.normalize();
-            
-            // Y轴（向上）= 速度方向（拉伸方向）
-            var up = new Vector3f(velocity).normalize();
-            
-            // 尝试使用摄像机方向计算右向量
-            var right = new Vector3f(up).cross(toCamera);
-            
-            // 如果叉积太小（接近平行），使用备用向量
-            if (right.lengthSquared() < 0.01f) {
-                // 尝试世界Y轴作为备用
-                var worldUp = new Vector3f(0, 1, 0);
-                right = new Vector3f(up).cross(worldUp);
-                
-                // 如果速度也接近世界Y轴，使用世界X轴
-                if (right.lengthSquared() < 0.01f) {
-                    var worldRight = new Vector3f(1, 0, 0);
-                    right = new Vector3f(up).cross(worldRight);
-                }
-            }
-            
-            right.normalize();
-            
-            // Z轴（向前）= 向右 × 向上，确保正交
+
+            // X轴（向右）= 速度方向（拉伸方向）
+            var right = new Vector3f(velocity).normalize();
+
+            // 尝试使用摄像机方向计算上向量
+            var up = new Vector3f(toCamera).cross(right);
+
+            up.normalize();
+
+            // Z轴（向前）= X轴 × Y轴，确保正交
             var forward = new Vector3f(right).cross(up).normalize();
-            
-            // 重新计算right确保完全正交
-            right = new Vector3f(up).cross(forward).normalize();
+
+            // 重新计算up确保完全正交
+            up = new Vector3f(forward).cross(right).normalize();
 
             // 构建旋转矩阵（JOML按列主序）
             var matrix = new org.joml.Matrix3f(
@@ -96,7 +80,7 @@ public class ParticleRendererSetting extends RendererSetting implements IConfigu
                     up.x, up.y, up.z,                // 第二列 (Y轴)
                     forward.x, forward.y, forward.z  // 第三列 (Z轴)
             );
-            
+
             var quaternion = new Quaternionf();
             quaternion.setFromNormalized(matrix);
             return quaternion;
@@ -165,21 +149,18 @@ public class ParticleRendererSetting extends RendererSetting implements IConfigu
                     new BooleanConfigurator("useBlockUV", this::isUseBlockUV, this::setUseBlockUV, true, true)
                             .setTips("photon.emitter.config.renderer.renderMode.model.useBlockUV"),
                     new Vector3fAccessor().create("modelPivot", this::getModelPivot, this::setModelPivot,
-                            true, getModelPivotField(), this)
+                                    true, getModelPivotField(), this)
                             .setTips("photon.emitter.config.renderer.renderMode.model.modelPivot")
-                    );
+            );
         } else if (mode == Mode.StretchedBillboard) {
             group.addConfigurators(
-                    new com.lowdragmc.lowdraglib2.configurator.ui.NumberConfigurator("speedScale", () -> speedScale, value -> setSpeedScale(value.floatValue()), 0.0f, true)
-                            .setRange(0.0f, 10.0f)
+                    new NumberConfigurator("speedScale", () -> speedScale, value -> setSpeedScale(value.floatValue()), 0.0f, true)
                             .setWheel(0.1f)
                             .setTips("photon.emitter.config.renderer.renderMode.stretchedBillboard.speedScale"),
-                    new com.lowdragmc.lowdraglib2.configurator.ui.NumberConfigurator("lengthScale", () -> lengthScale, value -> setLengthScale(value.floatValue()), 2.0f, true)
-                            .setRange(0.0f, 10.0f)
+                    new NumberConfigurator("lengthScale", () -> lengthScale, value -> setLengthScale(value.floatValue()), 2.0f, true)
                             .setWheel(0.1f)
                             .setTips("photon.emitter.config.renderer.renderMode.stretchedBillboard.lengthScale"),
-                    new com.lowdragmc.lowdraglib2.configurator.ui.NumberConfigurator("cameraScale", () -> cameraScale, value -> setCameraScale(value.floatValue()), 0.0f, true)
-                            .setRange(-2.0f, 2.0f)
+                    new NumberConfigurator("cameraScale", () -> cameraScale, value -> setCameraScale(value.floatValue()), 0.0f, true)
                             .setWheel(0.1f)
                             .setTips("photon.emitter.config.renderer.renderMode.stretchedBillboard.cameraScale")
             );

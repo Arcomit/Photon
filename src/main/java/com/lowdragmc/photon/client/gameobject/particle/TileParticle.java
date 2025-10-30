@@ -283,7 +283,7 @@ public class TileParticle implements IParticle {
 
     /**
      * from world to local
-u     */
+     u     */
     public Matrix4f getSpaceTransformInverse() {
         return config.getSimulationSpace() == ParticleConfig.Space.Local ?
                 emitter.transform().worldToLocalMatrix() :
@@ -662,14 +662,36 @@ u     */
             var normal = new Vector3f(0, 0, 1);
             var spaceScale = getSpaceScale();
 
-            // 应用伸展广告牌的长度缩放
+            // 应用伸展广告牌的缩放
             var finalSize = new Vector3f(size);
             if (renderMode == ParticleRendererSetting.Mode.StretchedBillboard) {
                 var velocity = getRealVelocity();
                 var speed = velocity.length();
-                var lengthScale = config.renderer.getLengthScale();
-                finalSize.y *= (1.0f + speed * lengthScale);
+                var rendererSetting = getConfig().renderer;
+                var speedScale = rendererSetting.getSpeedScale();
+                var lengthScale = rendererSetting.getLengthScale();
+                var cameraScale = rendererSetting.getCameraScale();
+
+                // Speed Scale: 基于速度的拉伸
+                var speedStretch = speed * speedScale;
+
+                // Length Scale: 基于粒子大小的拉伸
+                var lengthStretch = size.length() * lengthScale;
+
+                // Camera Scale: 基于与相机距离的缩放
+                var particlePos = getWorldPos(partialTicks);
+                var cameraPos = camera.getPosition();
+                var distanceToCamera = (float) Math.sqrt(
+                        (cameraPos.x - particlePos.x) * (cameraPos.x - particlePos.x) +
+                                (cameraPos.y - particlePos.y) * (cameraPos.y - particlePos.y) +
+                                (cameraPos.z - particlePos.z) * (cameraPos.z - particlePos.z)
+                );
+                var cameraStretch = distanceToCamera * cameraScale;
+
+                // 组合所有拉伸效果（X轴方向）
+                finalSize.x *= (1.0f + speedStretch + lengthStretch + cameraStretch);
             }
+
 
             for (var i = 0; i < 4; ++i) {
                 var vertex = rawVertexes[i];
